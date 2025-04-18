@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from app.text_similarity import create_faiss_index, calculate_similarity
 
 def test_similarity_logic():
