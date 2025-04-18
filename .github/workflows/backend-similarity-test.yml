@@ -24,5 +24,6 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest
 
-      - name: 🧪 Run similarity test
-        run: pytest backend/app/test_text_similarity.py
+      - name: 🔍 Run similarity test
+        run: pytest -s backend/app/test_text_similarity.py
+
