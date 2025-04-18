@@ -16,5 +16,9 @@ def test_similarity_logic():
     faiss_index, model = create_faiss_index(texts)
     most_similar_text, similarity_score = calculate_similarity(faiss_index, model, texts, query)
 
+     # 🖨️ Benzerlik skorunu loglamak için:
+        print(f"Most Similar Issue: {most_similar_text}")
+        print(f"Similarity Score (lower = more similar): {similarity_score}")
+
     assert most_similar_text in texts
     assert similarity_score < 5.0  # Düşük L2 mesafesi = yüksek benzerlik
