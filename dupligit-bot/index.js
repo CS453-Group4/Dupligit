@@ -12,11 +12,14 @@ export default (app) => {
     app.log.info(`📩 New issue received: "${issueTitle}"`);
     let similarResponse;
     try {
-      const res = await fetch("http://localhost:8000/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: issueTitle }),
-      });
+      const res = await fetch(
+        "https://420a-176-42-23-181.eu.ngrok.io/predict",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: issueTitle }),
+        }
+      );
       similarResponse = await res.json();
       app.log.info("🧠 Similarity result:", similarResponse);
     } catch (err) {
