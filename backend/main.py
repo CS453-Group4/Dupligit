@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from app.text_similarity import create_faiss_index, calculate_similarity
 
-
 app = FastAPI()
 
 @app.get("/")

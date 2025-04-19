@@ -3,3 +3,8 @@ faiss-cpu
 langchain
 langchain-community
 pandas
+fastapi
+uvicorn
+pydantic
+faiss-cpu
+sentence-transformers

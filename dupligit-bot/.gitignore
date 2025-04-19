@@ -5,3 +5,25 @@ npm-debug.log
 .env
 coverage
 lib
+# Python virtual environments
+
+**/venv/
+venv/
+backend/app/venv/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# FastAPI/uvicorn generated
+*.log
+
+
+
+# IDE and system files
+.idea/
+.DS_Store
+
+# Logs
+*.log
