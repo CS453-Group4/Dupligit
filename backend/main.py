@@ -28,5 +28,5 @@ def predict(query: Query):
     return {
         "query": query.text,
         "most_similar": similar_issue,
-        "similarity_score": score
+        "similarity_score": float(score)
     }
