@@ -8,6 +8,9 @@ jobs:
   check-duplicate:
     runs-on: ubuntu-latest
 
+    permissions:
+      issues: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -19,11 +22,11 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install sentence-transformers faiss-cpu requests
+          python -m pip install --upgrade pip
+          pip install -q sentence-transformers==2.2.2 faiss-cpu==1.7.4 requests
 
       - name: Run duplicate checker
-        run: |
-          python .github/scripts/check_duplicate.py
+        run: python .github/scripts/check_duplicate.py
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_TITLE: ${{ github.event.issue.title }}

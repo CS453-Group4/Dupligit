@@ -1,3 +1,5 @@
+# File: .github/scripts/check_duplicate.py
+
 import os
 import requests
 import faiss
@@ -38,17 +40,28 @@ D, I = index.search(np.array(query), k=1)
 most_similar_title = titles[I[0][0]]
 score = D[0][0]
 
-# Step 3: Comment if similar
+# Step 3: Prepare comment message
+base_comment = (
+    f"🔍 **Dupligit Bot Report**\n\n"
+    f"📝 Incoming Issue: _{issue_title}_\n"
+    f"\n"
+)
+
 if score < 10.0:
-    comment_body = (
-        f"🤖 **Possible duplicate found!**\n\n"
-        f"> _{most_similar_title}_\n"
-        f"🔍 Similarity Score: `{score:.2f}`\n"
-        f"_This issue is now under duplicate review._"
+    base_comment += (
+        f"🤖 This might be a duplicate of:\n> _{most_similar_title}_\n"
+        f"🧠 Similarity Score: `{score:.2f}`\n"
+        f"\n📌 Label `needs-duplicate-review` has been added.\n"
+        f"\n🔧 Maintainers can confirm by commenting:\n"
+        f"```bash\n/mark-duplicate #{I[0][0] + 1}\n```"
     )
 
-    comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
-    r = requests.post(comment_url, headers=headers, json={"body": comment_body})
-    print("Commented:", r.status_code)
+    # Add label
+    label_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/labels"
+    requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
 else:
-    print("No strong duplicate found.")
+    base_comment += "✅ No strong duplicate candidates found. You may proceed."
+
+# Step 4: Post the comment
+comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
+requests.post(comment_url, headers=headers, json={"body": base_comment})
