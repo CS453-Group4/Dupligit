@@ -15,13 +15,14 @@ headers = {
     "Authorization": f"token {token}",
     "Accept": "application/vnd.github+json"
 }
-
-# Comment URL for this issue
+# Notify the user that the bot is running
 comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
+comment_payload = {"body": "🔍 Dupligit Bot is checking for similar issues. Please wait..."}
+resp = requests.post(comment_url, headers=headers, json=comment_payload)
 
-# Step 0: Notify analysis start
-requests.post(comment_url, headers=headers, json={"body": "🧪 Dupligit is analyzing this issue for duplicates. Please wait..."})
-
+# DEBUG OUTPUT
+print("🧪 DEBUG: Comment POST status:", resp.status_code)
+print("🧪 DEBUG: Comment POST response:", resp.text)
 
 # Step 1: Fetch all other issue titles
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
