@@ -8,6 +8,9 @@ jobs:
   detect-duplicate:
     runs-on: ubuntu-latest
 
+    permissions:
+      issues: write
+
     steps:
       - name: 🔍 Extract issue info
         run: |
