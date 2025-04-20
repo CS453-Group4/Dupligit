@@ -1,44 +1,31 @@
-name: Dupligit Bot – Detect Duplicates on Issue
+name: Detect Duplicate Issues
 
 on:
   issues:
     types: [opened]
 
 jobs:
-  detect-duplicate:
+  check-duplicate:
     runs-on: ubuntu-latest
 
-    permissions:
-      issues: write
-
     steps:
-      - name: 🔍 Extract issue info
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
         run: |
-          echo "Issue Title: ${{ github.event.issue.title }}"
+          pip install sentence-transformers faiss-cpu requests
 
-      - name: Query /predict endpoint
+      - name: Run duplicate checker
         run: |
-          ISSUE_TITLE="${{ github.event.issue.title }}"
-
-          RESPONSE=$(curl -s -X POST https://9724-176-42-23-229.ngrok-free.app/predict \
-            -H "Content-Type: application/json" \
-            -d "{\"text\": \"$ISSUE_TITLE\"}")
-
-          echo "Backend response: $RESPONSE"
-
-          # Extract and format comment text
-          COMMENT=$(echo "$RESPONSE" | jq -Rs '
-            fromjson? // {} |
-            if .most_similar != null and .similarity_score != null then
-              "🤖 This might be similar to an existing issue:\n> \"" + .most_similar + "\"\n🧠 Similarity score: " + (.similarity_score | tostring)
-            else
-              "🔍 No strong duplicate candidates found."
-            end
-          ')
-
-          # Post comment on GitHub issue
-          curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -nc --arg body "$COMMENT" '{body: $body}')" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+          python .github/scripts/check_duplicate.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
