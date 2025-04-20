@@ -22,6 +22,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.log
+*.egg-info/
 
 # ------------------------
 # FastAPI
@@ -34,3 +35,10 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+
+# Datasets
+*.csv
+*.tsv
+
+# Jupyter Notebook ve checkpoints
+.ipynb_checkpoints/
