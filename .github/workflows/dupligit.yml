@@ -16,7 +16,6 @@ jobs:
         run: |
           echo "Issue Title: ${{ github.event.issue.title }}"
 
-            - name: Query /predict endpoint
       - name: Query /predict endpoint
         run: |
           ISSUE_TITLE="${{ github.event.issue.title }}"
