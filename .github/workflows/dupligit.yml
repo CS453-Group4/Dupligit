@@ -16,17 +16,30 @@ jobs:
         run: |
           echo "Issue Title: ${{ github.event.issue.title }}"
 
-      - name: 🌐 Query /predict endpoint
+            - name: Query /predict endpoint
+      - name: Query /predict endpoint
         run: |
-          RESPONSE=$(curl -s -X POST https://9724-176-42-23-229.eu.ngrok.io/predict \
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+
+          RESPONSE=$(curl -s -X POST https://9724-176-42-23-229.ngrok-free.app/predict \
             -H "Content-Type: application/json" \
-            -d "{\"text\": \"${{ github.event.issue.title }}\"}")
-          echo "$RESPONSE"
+            -d "{\"text\": \"$ISSUE_TITLE\"}")
 
-          COMMENT="🤖 Dupligit Bot says this might be a duplicate:\n\n$RESPONSE"
+          echo "Backend response: $RESPONSE"
 
-          curl -X POST \
+          # Extract and format comment text
+          COMMENT=$(echo "$RESPONSE" | jq -Rs '
+            fromjson? // {} |
+            if .most_similar != null and .similarity_score != null then
+              "🤖 This might be similar to an existing issue:\n> \"" + .most_similar + "\"\n🧠 Similarity score: " + (.similarity_score | tostring)
+            else
+              "🔍 No strong duplicate candidates found."
+            end
+          ')
+
+          # Post comment on GitHub issue
+          curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
-            -d "{\"body\": \"$COMMENT\"}"
+            -H "Content-Type: application/json" \
+            -d "$(jq -nc --arg body "$COMMENT" '{body: $body}')" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
