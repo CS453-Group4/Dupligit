@@ -13,7 +13,7 @@ export default (app) => {
     let similarResponse;
     try {
       const res = await fetch(
-        "https://9724-176-42-23-181.eu.ngrok.io/predict",
+        "https://9724-176-42-23-229.eu.ngrok.io/predict",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
