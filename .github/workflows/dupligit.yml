@@ -15,7 +15,7 @@ jobs:
 
       - name: 🌐 Query /predict endpoint
         run: |
-          RESPONSE=$(curl -s -X POST https://c6af-176-42-23-181.eu.ngrok.io/predict \
+          RESPONSE=$(curl -s -X POST https://9724-176-42-23-181.eu.ngrok.io/predict \
             -H "Content-Type: application/json" \
             -d "{\"text\": \"${{ github.event.issue.title }}\"}")
           echo "$RESPONSE"
