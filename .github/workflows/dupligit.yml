@@ -10,7 +10,7 @@ jobs:
 
     permissions:
       issues: write
-      contents: read  
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -21,18 +21,18 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Downgrade NumPy for FAISS compatibility
-        run: |
-          pip install numpy==1.26.4
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install \
-            sentence-transformers==2.2.2 \
-            huggingface-hub==0.14.1 \
-            faiss-cpu==1.7.4 \
-            requests
+          pip install -r backend/requirements.txt
 
       - name: Run duplicate checker
         run: python .github/scripts/check_duplicate.py
