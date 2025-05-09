@@ -4,39 +4,48 @@ from sentence_transformers import SentenceTransformer
 
 def create_faiss_index(texts):
     model = SentenceTransformer('all-MiniLM-L6-v2')
-
-    # Convert texts to embeddings
     embeddings = model.encode(texts)
-
-    # Create FAISS index
     dimension = len(embeddings[0])
+
     faiss_index = faiss.IndexFlatL2(dimension)
     faiss_index.add(np.array(embeddings))
     
     return faiss_index, model
 
 def calculate_similarity(faiss_index, model, texts, query_text):
-    # Convert query text (multi-sentence) to an embedding
     query_embedding = model.encode(query_text)
+    D, I = faiss_index.search(np.array([query_embedding]), k=len(texts))
 
-    # Perform search in FAISS index
-    D, I = faiss_index.search(np.array([query_embedding]), k=1)
+    results = []
+    for i, d in zip(I[0], D[0]):
+        results.append((texts[i], d))
+    
+    return results
 
-    # Return the most similar text and its similarity score
-    return texts[I[0][0]], D[0][0]
+def calculate_percentage_similarity(scores):
+    return [1 / (1 + score/1.7) * 100 for score in scores]
 
 def main():
-    # Create and initialize the FAISS index
-    faiss_index, model, texts = create_faiss_index()
+    texts = [
+        "When I try to push my branch, I keep getting a 403 error. I’ve confirmed I have write access, so I’m not sure what’s wrong.",
+        "The build pipeline fails after I merged my PR. It says something about missing secrets. This didn’t happen before.",
+        "Unable to clone the repository using SSH. I’ve added my SSH key but still get a permission denied error.",
+        "I'm experiencing issues with pushing to the repository. I get a permission error even though I’ve authenticated with a personal access token.",
+        "I think the README could be clearer about how to install dependencies. A section on system requirements would help too."
+    ]
+    query_text = "I can’t push to the repo — I get a permission denied error, even though my credentials are correct."
 
-    # Example multi-sentence query
-    query_text = "The login page freezes when I enter incorrect details. The only fix is to refresh."
+    faiss_index, model = create_faiss_index(texts)
 
-    # Find the most similar issue
-    most_similar_text, similarity_score = calculate_similarity(faiss_index, model, texts, query_text)
+    results = calculate_similarity(faiss_index, model, texts, query_text)
+    scores = [score for _, score in results]
 
-    print(f"Most Similar Issue: {most_similar_text}")
-    print(f"Similarity Score (lower is more similar): {similarity_score}")
+    percentage_similarities = calculate_percentage_similarity(scores)
+
+    print("\nSimilarity Results (lower = more similar):\n")
+    for rank, (text, percentage_similarity) in enumerate(zip(results, percentage_similarities), 1):
+        print(f"{rank}. Similarity: {percentage_similarity:.2f}%")
+        print(f"   → {text[0]}\n")
 
 if __name__ == "__main__":
     main()
