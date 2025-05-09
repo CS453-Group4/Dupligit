@@ -4,30 +4,8 @@ import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-def create_faiss_index(texts):
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    embeddings = model.encode(texts)
-    dimension = len(embeddings[0])
-
-    faiss_index = faiss.IndexFlatL2(dimension)
-    faiss_index.add(np.array(embeddings))
-    
-    return faiss_index, model
-
-def calculate_similarity(faiss_index, model, texts, query_text):
-    query_embedding = model.encode(query_text)
-    D, I = faiss_index.search(np.array([query_embedding]), k=len(texts))
-
-    results = []
-    for i, d in zip(I[0], D[0]):
-        results.append((texts[i], d))
-    
-    return results
-
-def calculate_percentage_similarity(scores):
-    return [1 / (1 + score/1.7) * 100 for score in scores]
-
-model = SentenceTransformer("all-MiniLM-L6-v2")
+from backend.app.text_sim_csv import calculate_similarity, create_faiss_index
+from backend.app.text_similarity import calculate_percentage_similarity
 
 issue_title = os.getenv("ISSUE_TITLE")
 issue_number = os.getenv("ISSUE_NUMBER")
@@ -40,12 +18,12 @@ headers = {
 }
 # Notify the user that the bot is running
 comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
-comment_payload = {"body": "🔍 Dupligit Bot is checking for similar issues. Please wait..."}
+"""comment_payload = {"body": "🔍 Dupligit Bot is checking for similar issues. Please wait..."}
 resp = requests.post(comment_url, headers=headers, json=comment_payload)
 
 # DEBUG OUTPUT
 print("🧪 DEBUG: Comment POST status:", resp.status_code)
-print("🧪 DEBUG: Comment POST response:", resp.text)
+print("🧪 DEBUG: Comment POST response:", resp.text)"""
 
 # Step 1: Fetch all other issue titles
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)

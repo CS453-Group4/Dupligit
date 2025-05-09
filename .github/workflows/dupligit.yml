@@ -34,6 +34,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
+      - name: Post initial comment indicating checking for similar issues
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -d '{"body": "🔍 Dupligit Bot is checking for similar issues. Please wait..."}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+
       - name: Run duplicate checker
         run: python .github/scripts/check_duplicate.py
         env:
