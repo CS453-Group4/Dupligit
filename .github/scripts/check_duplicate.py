@@ -63,7 +63,6 @@ scores = [score for _, score in results]
 
 percentage_similarities = calculate_percentage_similarity(scores)
 
-# Step 3: Prepare comment
 base_comment = (
     f"🔍 **Dupligit Bot Report**\n\n"
     f"📝 Incoming Issue: _{issue_title}_\n\n"
@@ -72,12 +71,16 @@ base_comment = (
 if percentage_similarities[0] > 70.0:  # Changed to percentage similarity threshold
     most_similar_title = results[0][0]
     score = percentage_similarities[0]
+    
+    # Find the index of the most similar issue from the results list
+    most_similar_index = titles.index(most_similar_title)
+
     base_comment += (
         f"🤖 This might be a duplicate of:\n> _{most_similar_title}_\n"
         f"🧠 Similarity Score: `{score:.2f}%`\n"
         f"\n📌 Label `needs-duplicate-review` has been added.\n"
         f"\n🔧 Maintainers can confirm by commenting:\n"
-        f"```bash\n/mark-duplicate #{results.index((most_similar_title, score)) + 1}\n```"
+        f"```bash\n/mark-duplicate #{most_similar_index + 1}\n```"
     )
 
     # Step 4: Add label
