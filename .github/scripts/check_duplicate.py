@@ -6,6 +6,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 import requests
 import faiss
 import numpy as np
+from backend.app.gemini_validation import validate_similarity_with_gemini
+
 from sentence_transformers import SentenceTransformer
 
 from backend.app.text_similarity import calculate_similarity, create_faiss_index
@@ -33,6 +35,24 @@ print("🧪 DEBUG: Comment POST response:", resp.text)"""
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 issues = r.json()
 titles = [i["title"] for i in issues if str(i["number"]) != issue_number]
+# Get body of current issue
+current_issue = next((i for i in issues if str(i["number"]) == issue_number), {})
+issue_body = current_issue.get("body", "")
+
+# Select top 3 similar issues
+top_n = 3
+top_results = results[:top_n]
+top_scores = percentage_similarities[:top_n]
+
+similar_issues = []
+for (title, _), score in zip(top_results, top_scores):
+    matched = next((i for i in issues if i["title"] == title), {})
+    similar_issues.append({
+        "title": matched.get("title", ""),
+        "body": matched.get("body", ""),
+        "score": score
+    })
+
 
 if not titles:
     requests.post(comment_url, headers=headers, json={"body": "ℹ️ No other issues found to compare."})
@@ -70,6 +90,11 @@ if percentage_similarities[0] > 70.0:  # Changed to percentage similarity thresh
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
 else:
     base_comment += "✅ No strong duplicate candidates found. You may proceed."
+
+# Step 4.5: Get Gemini validation
+gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
+
+base_comment += f"\n\n🧠 **Gemini Review**\n```\n{gemini_response}\n```"
 
 # Step 5: Post final comment
 requests.post(comment_url, headers=headers, json={"body": base_comment})
