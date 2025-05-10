@@ -1,44 +1,12 @@
-# ------------------------
-# Node.js
-# ------------------------
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# ------------------------
-# Environment Variables
-# ------------------------
-.env
-*.pem
-!mock-cert.pem
-
-# ------------------------
-# Python
-# ------------------------
-**/venv/
-venv/
-__pycache__/
-*.py[cod]
-*.pyo
-*.log
-*.egg-info/
-
-# ------------------------
-# FastAPI
-# ------------------------
-*.log
-
-# ------------------------
-# IDEs & OS
-# ------------------------
-.idea/
-.vscode/
-.DS_Store
-
-# Datasets
-*.csv
-*.tsv
-
-# Jupyter Notebook ve checkpoints
-.ipynb_checkpoints/
+/venv
+/node_modules
+/__pycache__
+package-lock.json
+.idea/Dupligit2.iml
+.idea/misc.xml
+.idea/vcs.xml
+backend/app/__pycache__/main.cpython-312.pyc
+package-lock.json
+.idea/modules.xml
+package-lock.json
+package-lock.json

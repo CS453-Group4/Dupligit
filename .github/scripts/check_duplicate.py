@@ -6,11 +6,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 import requests
 import faiss
 import numpy as np
-from backend.app.gemini_validation import validate_similarity_with_gemini
-
 from sentence_transformers import SentenceTransformer
 
-from backend.app.text_similarity import calculate_similarity, create_faiss_index
+from backend.app.text_sim_csv import calculate_similarity, create_faiss_index
 from backend.app.text_similarity import calculate_percentage_similarity
 
 issue_title = os.getenv("ISSUE_TITLE")
@@ -35,24 +33,6 @@ print("🧪 DEBUG: Comment POST response:", resp.text)"""
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 issues = r.json()
 titles = [i["title"] for i in issues if str(i["number"]) != issue_number]
-# Get body of current issue
-current_issue = next((i for i in issues if str(i["number"]) == issue_number), {})
-issue_body = current_issue.get("body", "")
-
-# Select top 3 similar issues
-top_n = 3
-top_results = results[:top_n]
-top_scores = percentage_similarities[:top_n]
-
-similar_issues = []
-for (title, _), score in zip(top_results, top_scores):
-    matched = next((i for i in issues if i["title"] == title), {})
-    similar_issues.append({
-        "title": matched.get("title", ""),
-        "body": matched.get("body", ""),
-        "score": score
-    })
-
 
 if not titles:
     requests.post(comment_url, headers=headers, json={"body": "ℹ️ No other issues found to compare."})
@@ -70,31 +50,36 @@ base_comment = (
     f"📝 Incoming Issue: _{issue_title}_\n\n"
 )
 
-if percentage_similarities[0] > 70.0:  # Changed to percentage similarity threshold
-    most_similar_title = results[0][0]
-    score = percentage_similarities[0]
-    
-    # Find the index of the most similar issue from the results list
-    most_similar_index = titles.index(most_similar_title)
+if percentage_similarities[0] > 70.0:
+    base_comment += (
+        "🔍 **Potential Duplicate Issues Found**\n\n"
+        "We've detected similar issues to this one:\n\n"
+        "| Issue # | Title | Similarity |\n"
+        "|---------|-------|------------|\n"
+    )
+
+    for i, (title, _) in enumerate(results[:5]):
+        percentage = percentage_similarities[i]
+        if percentage < 70.0:
+            continue
+
+        issue_index = titles.index(title) + 1  # Approximation (may need adjustment if order differs)
+        title_link = f"https://github.com/{repo}/issues/{issue_index}"
+        safe_title = title.replace("|", "｜")  # escape markdown pipe
+        base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {percentage:.0f}% |\n"
 
     base_comment += (
-        f"🤖 This might be a duplicate of:\n> _{most_similar_title}_\n"
-        f"🧠 Similarity Score: `{score:.2f}%`\n"
-        f"\n📌 Label `needs-duplicate-review` has been added.\n"
-        f"\n🔧 Maintainers can confirm by commenting:\n"
-        f"```bash\n/mark-duplicate #{most_similar_index + 1}\n```"
+        "\n📌 Label `needs-duplicate-review` has been added.\n"
+        "\n🔧 Maintainers can confirm by commenting:\n"
+        "```bash\n/mark-duplicate #<issue_number>\n```"
     )
 
     # Step 4: Add label
     label_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/labels"
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
+
 else:
     base_comment += "✅ No strong duplicate candidates found. You may proceed."
-
-# Step 4.5: Get Gemini validation
-gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
-
-base_comment += f"\n\n🧠 **Gemini Review**\n```\n{gemini_response}\n```"
 
 # Step 5: Post final comment
 requests.post(comment_url, headers=headers, json={"body": base_comment})
