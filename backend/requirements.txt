@@ -8,4 +8,4 @@ uvicorn
 pydantic
 faiss-cpu
 sentence-transformers
-google-generativeai
+google-generativeai>=0.3.2
