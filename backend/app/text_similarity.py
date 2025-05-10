@@ -12,20 +12,14 @@ def create_faiss_index(texts):
     faiss_index = faiss.IndexFlatL2(dimension)
     faiss_index.add(np.array(embeddings))
     
-    return faiss_index, model
+    return faiss_index, model, embeddings
 
-def calculate_similarity(faiss_index, model, texts, query_text):
-    query_embedding = model.encode(query_text)
-    D, I = faiss_index.search(np.array([query_embedding]), k=len(texts))
-
-    results = []
-    for i, d in zip(I[0], D[0]):
-        results.append((texts[i], d))
-    
-    return results
+def calculate_similarity(faiss_index, query_embedding, k):
+    D, I = faiss_index.search(np.array([query_embedding]), k=k)
+    return I[0], D[0]
 
 def calculate_percentage_similarity(scores):
-    return [1 / (1 + score/1.7) * 100 for score in scores]
+    return [1 / (1 + score / 1.7) * 100 for score in scores]
 
 def main():
     df = pd.read_csv('bug_reports.csv')
@@ -40,11 +34,11 @@ def main():
 
     for idx, (issue_id, text) in tqdm(enumerate(zip(issue_ids, texts)), total=len(texts)):
         query_embedding = embeddings[idx]
-        I, D = calculate_similarity(faiss_index, model, query_embedding)
+        I, D = calculate_similarity(faiss_index, query_embedding, k=len(texts))
 
         # Skip the first result if it's the query itself
         similar_indices = [i for i in I if i != idx][:5]
-        distances = [D[i] for i in range(len(I)) if I[i] != idx][:5]
+        distances = [d for i, d in zip(I, D) if i != idx][:5]
         similarities = calculate_percentage_similarity(distances)
 
         row = {'Issue_id': issue_id}
