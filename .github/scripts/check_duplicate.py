@@ -7,6 +7,7 @@ import requests
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from backend.app.gemini_validation import validate_similarity_with_gemini
 
 from backend.app.text_sim_csv import calculate_similarity, create_faiss_index
 from backend.app.text_similarity import calculate_percentage_similarity
@@ -44,6 +45,25 @@ results = calculate_similarity(faiss_index, model, titles, issue_title)
 scores = [score for _, score in results]
 
 percentage_similarities = calculate_percentage_similarity(scores)
+# 🔍 Prepare Gemini input
+current_issue = next((i for i in issues if str(i["number"]) == issue_number), {})
+issue_body = current_issue.get("body", "")
+
+top_n = 3
+top_results = results[:top_n]
+top_scores = percentage_similarities[:top_n]
+
+similar_issues = []
+for (title, _), score in zip(top_results, top_scores):
+    matched = next((i for i in issues if i["title"] == title), {})
+    similar_issues.append({
+        "title": matched.get("title", ""),
+        "body": matched.get("body", ""),
+        "score": score
+    })
+
+gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
+
 
 base_comment = (
     f"🔍 **Dupligit Bot Report**\n\n"
@@ -80,6 +100,8 @@ if percentage_similarities[0] > 70.0:
 
 else:
     base_comment += "✅ No strong duplicate candidates found. You may proceed."
+
+base_comment += f"\n\n🧠 **Gemini Review**\n```\n{gemini_response}\n```"
 
 # Step 5: Post final comment
 requests.post(comment_url, headers=headers, json={"body": base_comment})
