@@ -32,7 +32,9 @@ print("🧪 DEBUG: Comment POST response:", resp.text)"""
 # Step 1: Fetch all other issue titles
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 issues = r.json()
-titles = [i["title"] for i in issues if str(i["number"]) != issue_number]
+filtered_issues = [(i["title"], i["number"]) for i in issues if str(i["number"]) != issue_number]
+titles = [t[0] for t in filtered_issues]
+
 
 if not titles:
     requests.post(comment_url, headers=headers, json={"body": "ℹ️ No other issues found to compare."})
@@ -83,7 +85,9 @@ if percentage_similarities[0] > 70.0:
         if percentage < 70.0:
             continue
 
-        issue_index = titles.index(title) + 1  # Approximation (may need adjustment if order differs)
+        issue_index = next((num for t, num in filtered_issues if t == title), None)
+        if issue_index is None:
+            continue
         title_link = f"https://github.com/{repo}/issues/{issue_index}"
         safe_title = title.replace("|", "｜")  # escape markdown pipe
         base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {percentage:.0f}% |\n"
