@@ -3,8 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 import logging
 
-from app.text_similarity import calculate_similarity, create_faiss_index
-from app.text_similarity import calculate_percentage_similarity
+from text_similarity_test import calculate_percentage_similarity, calculate_similarity, create_faiss_index
 
 # Set up logging with DEBUG level
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
