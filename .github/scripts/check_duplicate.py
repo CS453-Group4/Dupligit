@@ -9,7 +9,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from backend.app.gemini_validation import validate_similarity_with_gemini
 
-from backend.app.text_sim_csv import calculate_similarity, create_faiss_index
+from backend.app.text_sim_csv import create_faiss_index
+from backend.app.text_similarity import calculate_similarity
+
 from backend.app.text_similarity import calculate_percentage_similarity
 
 issue_title = os.getenv("ISSUE_TITLE")
