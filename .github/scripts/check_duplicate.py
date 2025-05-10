@@ -4,12 +4,9 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 import requests
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer
 from backend.app.gemini_validation import validate_similarity_with_gemini
 
-from backend.app.text_sim_csv import create_faiss_index
+from backend.app.text_similarity import create_faiss_index
 from backend.app.text_similarity import calculate_similarity
 
 from backend.app.text_similarity import calculate_percentage_similarity
@@ -43,8 +40,7 @@ if not titles:
 
 
 # Step 2: Create FAISS index and calculate similarity
-model = SentenceTransformer("all-MiniLM-L6-v2")
-faiss_index, _ = create_faiss_index(titles, model)
+faiss_index, model = create_faiss_index(titles)
 results = calculate_similarity(faiss_index, model, titles, issue_title)
 scores = [score for _, score in results]
 
