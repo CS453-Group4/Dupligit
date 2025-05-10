@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("models/gemini-pro")
 
 def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
     prompt = f"""You are an expert in software QA and duplicate issue detection.
