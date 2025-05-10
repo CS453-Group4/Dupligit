@@ -33,7 +33,9 @@ print("🧪 DEBUG: Comment POST response:", resp.text)"""
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 issues = r.json()
 filtered_issues = [(i["title"], i["number"]) for i in issues if str(i["number"]) != issue_number]
-titles = [t[0] for t in filtered_issues]
+unique_titles = list(dict.fromkeys([t[0] for t in filtered_issues]))
+titles = unique_titles
+
 
 
 if not titles:
