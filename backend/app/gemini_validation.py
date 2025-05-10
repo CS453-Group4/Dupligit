@@ -1,12 +1,10 @@
-
 import os
-import google.generativeai as genai
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-model = genai.GenerativeModel("models/gemini-pro")
+import requests
 
 def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
+    api_key = os.getenv("GEMINI_API_KEY")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+
     prompt = f"""You are an expert in software QA and duplicate issue detection.
 
 The newly created GitHub issue is:
@@ -35,8 +33,17 @@ Reply using this format:
 ]
 """
 
+    body = {
+        "contents": [
+            {
+                "parts": [{"text": prompt}]
+            }
+        ]
+    }
+
     try:
-        response = model.generate_content(prompt)
-        return response.text  # Raw JSON-like string from Gemini
+        response = requests.post(url, json=body)
+        response.raise_for_status()
+        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         return f"Gemini validation failed: {str(e)}"
