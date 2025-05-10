@@ -38,6 +38,7 @@ titles = [i["title"] for i in issues if str(i["number"]) != issue_number]
 if not titles:
     requests.post(comment_url, headers=headers, json={"body": "ℹ️ No other issues found to compare."})
     exit(0)
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Step 2: Create FAISS index and calculate similarity
 faiss_index, model = create_faiss_index(titles)
