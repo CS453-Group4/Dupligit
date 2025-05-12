@@ -36,12 +36,9 @@ filtered_issues = [(i["title"], i["number"]) for i in issues if str(i["number"])
 unique_titles = list(dict.fromkeys([t[0] for t in filtered_issues]))
 titles = unique_titles
 
-
-
 if not titles:
     requests.post(comment_url, headers=headers, json={"body": "ℹ️ No other issues found to compare."})
     exit(0)
-
 
 # Step 2: Create FAISS index and calculate similarity
 faiss_index, model = create_faiss_index(titles)

@@ -39,7 +39,7 @@ def main():
     texts = df['text'].tolist()
 
     logger.info("Creating FAISS index...")
-    faiss_index, model, embeddings = create_faiss_index(texts)
+    faiss_index, embeddings = create_faiss_index(texts)
     logger.info("FAISS index created.")
 
     result_rows = []
