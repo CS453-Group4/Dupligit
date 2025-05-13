@@ -8,6 +8,28 @@ import requests
 from backend.app.gemini_validation import validate_similarity_with_gemini
 from backend.app.text_similarity import create_faiss_index, calculate_similarity, calculate_percentage_similarity
 
+
+# Load environment variables
+issue_title = os.getenv("ISSUE_TITLE") or ""
+issue_number = os.getenv("ISSUE_NUMBER")
+repo = os.getenv("REPO")
+token = os.getenv("GH_TOKEN")
+
+# ✅ Validate required envs
+required_envs = {
+    "REPO": repo,
+    "GH_TOKEN": token,
+    "ISSUE_NUMBER": issue_number,
+    "ISSUE_TITLE": issue_title
+}
+
+for key, val in required_envs.items():
+    if not val:
+        print(f"❌ Missing environment variable: {key}")
+        exit(1)
+
+
+
 # 🔧 CONFIGURABLE WEIGHTS
 TITLE_WEIGHT = 0.6
 BODY_WEIGHT = 0.4
@@ -32,7 +54,19 @@ comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/commen
 
 # Step 1: Fetch all issues
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
-issues = r.json()
+
+try:
+    issues = r.json()
+except Exception as e:
+    print("❌ Failed to parse JSON from GitHub issues response")
+    print("🔁 Raw response:", r.text)
+    raise e
+
+if not isinstance(issues, list):
+    print("❌ GitHub API did not return a list of issues")
+    print("🔁 Response:", issues)
+    exit(1)
+
 print("🧪 All issues fetched:")
 for i in issues:
     print(f"- #{i['number']}: {i['title']}")
