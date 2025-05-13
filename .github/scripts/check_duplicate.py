@@ -62,7 +62,7 @@ query_text = weighted_text(issue_title, issue_body)
 
 # Step 5: Similarity search
 results = calculate_similarity(faiss_index, model, combined_texts, query_text)
-print("🧪 Top FAISS results:")
+print("Top FAISS results:")
 for i, (text, score) in enumerate(results[:5]):
     print(f"{i+1}. Score: {score}")
 
@@ -82,7 +82,7 @@ for (text, _), score in zip(top_results, top_scores):
         similar_issues.append({
             "title": title,
             "body": body,
-            "score": float(score)  # ✅ Convert np.float32 to float
+            "score": float(score)  
         })
 
 print("🔬 Gemini INPUT DEBUG:")
@@ -94,7 +94,6 @@ print("🧠 Gemini Parsed Response:")
 print(json.dumps(gemini_response, indent=2))
 
 
-# ✅ Filter similar_issues to only those Gemini marked as "Correct"
 filtered_similar_issues = []
 for issue in similar_issues:
     verdict = next((v for v in gemini_response if v["matched_issue_title"] == issue["title"]), None)
@@ -108,13 +107,13 @@ for i in filtered_similar_issues:
 
 # Step 7: Prepare comment
 base_comment = (
-    f"🔍 **Dupligit Bot Report**\n\n"
-    f"📝 Incoming Issue: _{issue_title}_\n\n"
+    f"**Dupligit Bot Report**\n\n"
+    f"Issue under review: *{issue_title}*\n\n"
 )
 
 if percentage_similarities[0] > 70.0:
     base_comment += (
-        "🔍 **Potential Duplicate Issues Found**\n\n"
+        " **Potential Duplicate Issues Found**\n\n"
         "We've detected similar issues to this one:\n\n"
         "| Issue # | Title | Similarity |\n"
         "|---------|-------|------------|\n"
@@ -130,8 +129,8 @@ if percentage_similarities[0] > 70.0:
             base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {score:.0f}% |\n"
 
     base_comment += (
-        "\n📌 Label `needs-duplicate-review` has been added.\n"
-        "\n🔧 Maintainers can confirm by commenting:\n"
+        "\nLabel `needs-duplicate-review` has been added.\n"
+        "\nMaintainers can confirm by commenting:\n"
         "```bash\n/mark-duplicate #<issue_number>\n```"
     )
 
@@ -140,12 +139,10 @@ if percentage_similarities[0] > 70.0:
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
 
 else:
-    base_comment += "✅ No strong duplicate candidates found. You may proceed."
+    base_comment += "No strong duplicate candidates found. You may proceed."
 
-if gemini_response:
-    base_comment += f"\n\n🧠 **Gemini Review**\n```\n{json.dumps(gemini_response, indent=2)}\n```"
-else:
-    base_comment += "\n\n🧠 Gemini did not confirm any duplicates."
+if not filtered_similar_issues:
+    base_comment += "\n\nNote: No duplicate issues were confirmed by the system."
 
 
 # Step 8: Post final comment
