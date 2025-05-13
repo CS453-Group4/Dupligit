@@ -32,19 +32,7 @@ runs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install -r backend/requirements.txt
-      shell: bash
-
-    - name: Run appropriate script
-      run: |
-        if [ "${{ inputs.mode }}" = "check" ]; then
-          python .github/scripts/check_duplicate.py
-        elif [ "${{ inputs.mode }}" = "mark" ]; then
-          python .github/scripts/mark_duplicate.py
-        else
-          echo "❌ Invalid mode: ${{ inputs.mode }}"
-          exit 1
-        fi
+        pip install -r "${{ github.action_path }}/backend/requirements.txt"
       shell: bash
 
     - name: Export environment
@@ -54,4 +42,16 @@ runs:
         echo "ISSUE_TITLE=${{ inputs.issue-title }}" >> $GITHUB_ENV
         echo "ISSUE_BODY=${{ inputs.issue-body }}" >> $GITHUB_ENV
         echo "COMMENT_AUTHOR=${{ inputs.comment-author }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Run appropriate script
+      run: |
+        if [ "${{ inputs.mode }}" = "check" ]; then
+          python "${{ github.action_path }}/.github/scripts/check_duplicate.py"
+        elif [ "${{ inputs.mode }}" = "mark" ]; then
+          python "${{ github.action_path }}/.github/scripts/mark_duplicate.py"
+        else
+          echo "❌ Invalid mode: ${{ inputs.mode }}"
+          exit 1
+        fi
       shell: bash

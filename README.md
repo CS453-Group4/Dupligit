@@ -13,7 +13,6 @@ Detect and mark duplicate GitHub issues using semantic embeddings and LLM valida
 1. Add this to your repo's `.github/workflows/dupligit.yml`:
 
 ```yaml
-
 name: Dupligit Bot
 
 on:
@@ -27,7 +26,8 @@ jobs:
     if: github.event_name == 'issues'
     runs-on: ubuntu-latest
     steps:
-      - uses: yourusername/dupligit-action@v1
+      - name: Run Dupligit Check
+        uses: CS453-Group4/Dupligit@v1.0.0
         with:
           mode: check
           issue-title: ${{ github.event.issue.title }}
@@ -40,12 +40,13 @@ jobs:
       contains(github.event.comment.body, '/mark-duplicate')
     runs-on: ubuntu-latest
     steps:
-      - uses: yourusername/dupligit-action@v1
+      - name: Run Dupligit Mark
+        uses: CS453-Group4/Dupligit@v1.0.0
         with:
           mode: mark
           issue-body: ${{ github.event.comment.body }}
           issue-number: ${{ github.event.issue.number }}
           comment-author: ${{ github.event.comment.user.login }}
           repo: ${{ github.repository }}
-          
+
 ```
