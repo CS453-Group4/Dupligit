@@ -22,13 +22,11 @@ def main():
 
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
-    # Load evaluation issue IDs from test_thunderbird.csv
     eval_file_path = os.path.join(script_dir, 'bug_report_dataset/test_thunderbird.csv')
     eval_df = pd.read_csv(eval_file_path)
     eval_issue_ids = eval_df['Issue_id'].astype(int).tolist()
     logger.info(f"Loaded {len(eval_issue_ids)} issue IDs to evaluate.")
 
-    # Load the full dataset
     file_path = os.path.join(script_dir, 'bug_report_dataset', 'bug_reports_thunderbird.csv')
     df = pd.read_csv(file_path)
     df.columns = df.columns.str.strip()
@@ -36,17 +34,14 @@ def main():
     df['text'] = df['Title'].fillna('') + ' ' + df['Description'].fillna('')
     logger.info(f"Dataset loaded with {len(df)} rows.")
 
-    # Filter dataset to only the evaluation Issue_ids
     df_eval = df[df['Issue_id'].isin(eval_issue_ids)].reset_index(drop=True)
     logger.info(f"Filtered dataset contains {len(df_eval)} evaluation rows.")
 
-    # Create FAISS index on all issues (including ones not in eval set)
     issue_ids_all = df['Issue_id'].tolist()
     texts_all = df['text'].tolist()
     faiss_index, embeddings_all = create_faiss_index(texts_all)
     logger.info("FAISS index created on all data.")
 
-    # Build a lookup from issue_id to embedding index
     id_to_index = {issue_id: idx for idx, issue_id in enumerate(issue_ids_all)}
 
     result_rows = []

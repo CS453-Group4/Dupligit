@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 def create_faiss_index(texts):
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     embeddings = model.encode(texts)
     dimension = len(embeddings[0])
 
