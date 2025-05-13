@@ -48,11 +48,16 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
         print("🧠 Gemini Raw Output Text:")
         print(gemini_text)
 
+        # ✅ Strip ```json ... ``` block if it exists
+        if gemini_text.strip().startswith("```json"):
+            gemini_text = gemini_text.strip()[7:-3].strip()  # remove ```json and ```
+
         try:
             parsed = json.loads(gemini_text)
             return parsed
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             print("⚠️ Gemini response could not be parsed as JSON.")
+            print("⚠️ Error:", e)
             return []
 
 
