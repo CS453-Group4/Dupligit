@@ -81,6 +81,15 @@ print("issue_body:", issue_body)
 print("similar_issues:", similar_issues)
 gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
 
+# ✅ Filter similar_issues to only those Gemini marked as "Correct"
+filtered_similar_issues = []
+for issue in similar_issues:
+    verdict = next((v for v in gemini_response if v["matched_issue_title"] == issue["title"]), None)
+    if verdict and verdict["verdict"].lower() == "correct":
+        filtered_similar_issues.append(issue)
+
+
+
 # Step 7: Prepare comment
 base_comment = (
     f"🔍 **Dupligit Bot Report**\n\n"
@@ -95,18 +104,14 @@ if percentage_similarities[0] > 70.0:
         "|---------|-------|------------|\n"
     )
 
-    for i, (text, _) in enumerate(results[:5]):
-        percentage = percentage_similarities[i]
-        if percentage < 70.0:
-            continue
-
-        match = next(((title, num) for (title, num, body), w_text in zip(filtered_issues, combined_texts) if weighted_text(title, body) == text), None)
-        if not match:
-            continue
-        title, issue_index = match
-        title_link = f"https://github.com/{repo}/issues/{issue_index}"
-        safe_title = title.replace("|", "｜")  # escape pipe
-        base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {percentage:.0f}% |\n"
+    for issue in filtered_similar_issues:
+        title = issue["title"]
+        score = issue["score"]
+        issue_index = next((num for t, num, _ in filtered_issues if t == title), None)
+        if issue_index:
+            title_link = f"https://github.com/{repo}/issues/{issue_index}"
+            safe_title = title.replace("|", "｜")
+            base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {score:.0f}% |\n"
 
     base_comment += (
         "\n📌 Label `needs-duplicate-review` has been added.\n"
