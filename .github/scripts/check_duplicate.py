@@ -139,12 +139,12 @@ for i in filtered_similar_issues:
     print(f"- {i['title']} ({i['score']:.1f}%)")
 
 
-
 # Step 7: Prepare comment
 base_comment = (
     f"**Dupligit Bot Report**\n\n"
     f"Issue under review: *{issue_title}*\n\n"
 )
+
 if filtered_similar_issues:
     base_comment += (
         " **Potential Duplicate Issues Found**\n\n"
@@ -152,28 +152,25 @@ if filtered_similar_issues:
         "| Issue # | Title | Similarity |\n"
         "|---------|-------|------------|\n"
     )
-
     for issue in filtered_similar_issues:
-        title = issue["title"]
-        score = issue["score"]
-        issue_index = next((num for t, num, _ in filtered_issues if t == title), None)
-        if issue_index:
-            title_link = f"https://github.com/{repo}/issues/{issue_index}"
-            safe_title = title.replace("|", "｜")
-            base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {score:.0f}% |\n"
+        ...
+        base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {score:.0f}% |\n"
 
     base_comment += (
-        "\nLabel `needs-duplicate-review` has been added.\n"
-        "\nMaintainers can confirm by commenting:\n"
+        "\n📌 Label `needs-duplicate-review` has been added.\n"
+        "\n🔧 Maintainers can confirm by commenting:\n"
         "```bash\n/mark-duplicate #<issue_number>\n```"
     )
 
-    # Add label
+    # ✅ Add label
     label_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/labels"
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
 else:
-    base_comment += "No strong duplicate candidates were confirmed by Gemini."
+    base_comment += "✅ No strong duplicate candidates were confirmed by Gemini.\n"
+    base_comment += "You may proceed or wait for human triage.\n"
 
+# ✅ Always post the comment
+print("📝 Posting final comment:")
+print(base_comment)
 
-# Step 8: Post final comment
 requests.post(comment_url, headers=headers, json={"body": base_comment})
