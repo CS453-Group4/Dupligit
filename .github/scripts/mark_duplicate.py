@@ -39,10 +39,11 @@ if not is_authorized_user(comment_author):
     comment_on_issue(duplicate_number, f"🚫 Sorry @{comment_author}, you are not authorized to mark issues as duplicates.")
     exit(1)
 
-try:
-    # 💬 Inform user we're beginning the process
+# 💬 Inform user we're beginning the process
     comment_on_issue(duplicate_number, f"🔁 Attempting to mark this issue as duplicate of #{target_issue}...")
 
+try:
+    
     # --- Step 3: Add label ---
     label_url = f"https://api.github.com/repos/{repo}/issues/{duplicate_number}/labels"
     label_response = requests.post(label_url, headers=headers, json={"labels": ["duplicate"]})
