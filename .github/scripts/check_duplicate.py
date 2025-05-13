@@ -90,6 +90,9 @@ print("issue_title:", issue_title)
 print("issue_body:", issue_body)
 print("similar_issues:", similar_issues)
 gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
+print("🧠 Gemini Parsed Response:")
+print(json.dumps(gemini_response, indent=2))
+
 
 # ✅ Filter similar_issues to only those Gemini marked as "Correct"
 filtered_similar_issues = []
@@ -97,6 +100,9 @@ for issue in similar_issues:
     verdict = next((v for v in gemini_response if v["matched_issue_title"] == issue["title"]), None)
     if verdict and verdict["verdict"].lower() == "correct":
         filtered_similar_issues.append(issue)
+print("✅ Gemini-approved duplicates:")
+for i in filtered_similar_issues:
+    print(f"- {i['title']} ({i['score']:.1f}%)")
 
 
 
