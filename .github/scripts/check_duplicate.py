@@ -89,9 +89,10 @@ faiss_index, model = create_faiss_index(combined_texts)
 
 # Step 4: Prepare current issue query
 current_issue = next((i for i in issues if str(i["number"]) == issue_number), {})
-issue_body = current_issue.get("body", "")
-if not issue_body.strip():
+issue_body = current_issue.get("body") or ""
+if not issue_body.strip():  # ✅ this now always runs on a string
     issue_body = "(no description provided)"
+
 query_text = weighted_text(issue_title, issue_body)
 
 # Step 5: Similarity search
