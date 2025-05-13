@@ -39,9 +39,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-           pip install -r dupligit-bot/backend/requirements.txt  # ✅ Güncel yol
+           pip install -r backend/requirements.txt
 
-      
       - name: Run duplicate checker
         run: python dupligit-bot/.github/scripts/check_duplicate.py
         env:
