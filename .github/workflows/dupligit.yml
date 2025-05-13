@@ -42,7 +42,7 @@ jobs:
            pip install -r backend/requirements.txt
 
       - name: Run duplicate checker
-        run: python dupligit-bot/.github/scripts/check_duplicate.py
+        run: python github/scripts/check_duplicate.py
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # ✅ Add this line
