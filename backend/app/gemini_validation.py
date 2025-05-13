@@ -16,7 +16,8 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
     """
 
     for idx, issue in enumerate(similar_issues, 1):
-        body = issue['body'].strip().replace("\n", " ")[:300]  # trim + flatten body
+        body = (issue.get('body') or '').strip().replace("\n", " ")[:300]
+
         prompt += f"\n{idx}. Title: {issue['title']}\n   Description: {body}\n   Similarity Score: {issue['score']:.2f}%"
 
     prompt += """
