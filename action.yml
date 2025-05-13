@@ -1,0 +1,57 @@
+name: 'Dupligit Action'
+description: 'Detect and mark duplicate GitHub issues using embeddings and LLMs'
+
+inputs:
+  mode:
+    description: 'Which mode to run: check or mark'
+    required: true
+  issue-title:
+    description: 'Issue title (for check mode)'
+    required: false
+  issue-number:
+    description: 'Issue number'
+    required: true
+  issue-body:
+    description: 'Issue comment (for mark mode)'
+    required: false
+  comment-author:
+    description: 'Author of comment'
+    required: false
+  repo:
+    description: 'Full repository name'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r backend/requirements.txt
+      shell: bash
+
+    - name: Run appropriate script
+      run: |
+        if [ "${{ inputs.mode }}" = "check" ]; then
+          python .github/scripts/check_duplicate.py
+        elif [ "${{ inputs.mode }}" = "mark" ]; then
+          python .github/scripts/mark_duplicate.py
+        else
+          echo "❌ Invalid mode: ${{ inputs.mode }}"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Export environment
+      run: |
+        echo "REPO=${{ inputs.repo }}" >> $GITHUB_ENV
+        echo "ISSUE_NUMBER=${{ inputs.issue-number }}" >> $GITHUB_ENV
+        echo "ISSUE_TITLE=${{ inputs.issue-title }}" >> $GITHUB_ENV
+        echo "ISSUE_BODY=${{ inputs.issue-body }}" >> $GITHUB_ENV
+        echo "COMMENT_AUTHOR=${{ inputs.comment-author }}" >> $GITHUB_ENV
+      shell: bash
