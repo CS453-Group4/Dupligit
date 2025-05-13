@@ -70,7 +70,7 @@ scores = [score for _, score in results]
 percentage_similarities = calculate_percentage_similarity(scores)
 
 # Step 6: Top matches
-top_n = 3
+top_n = 20
 top_results = results[:top_n]
 top_scores = percentage_similarities[:top_n]
 
@@ -99,6 +99,7 @@ for issue in similar_issues:
     verdict = next((v for v in gemini_response if v["matched_issue_title"] == issue["title"]), None)
     if verdict and verdict["verdict"].lower() == "correct":
         filtered_similar_issues.append(issue)
+filtered_similar_issues = filtered_similar_issues[:5]
 print("✅ Gemini-approved duplicates:")
 for i in filtered_similar_issues:
     print(f"- {i['title']} ({i['score']:.1f}%)")
@@ -110,8 +111,7 @@ base_comment = (
     f"**Dupligit Bot Report**\n\n"
     f"Issue under review: *{issue_title}*\n\n"
 )
-
-if percentage_similarities[0] > 70.0:
+if filtered_similar_issues:
     base_comment += (
         " **Potential Duplicate Issues Found**\n\n"
         "We've detected similar issues to this one:\n\n"
@@ -134,15 +134,11 @@ if percentage_similarities[0] > 70.0:
         "```bash\n/mark-duplicate #<issue_number>\n```"
     )
 
-    # Label it
+    # Add label
     label_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/labels"
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
-
 else:
-    base_comment += "No strong duplicate candidates found. You may proceed."
-
-if not filtered_similar_issues:
-    base_comment += "\n\nNote: No duplicate issues were confirmed by the system."
+    base_comment += "No strong duplicate candidates were confirmed by Gemini."
 
 
 # Step 8: Post final comment
