@@ -116,8 +116,10 @@ for (text, _), score in zip(top_results, top_scores):
         similar_issues.append({
             "title": title,
             "body": body,
-            "score": float(score)  
+            "score": float(score),
+            "number": number
         })
+
 
 print("🔬 Gemini INPUT DEBUG:")
 print("issue_title:", issue_title)
