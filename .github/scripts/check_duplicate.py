@@ -32,6 +32,10 @@ comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/commen
 # Step 1: Fetch all issues
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 issues = r.json()
+print("🧪 All issues fetched:")
+for i in issues:
+    print(f"- #{i['number']}: {i['title']}")
+
 
 # Step 2: Filter issues
 filtered_issues = [
@@ -57,6 +61,10 @@ query_text = weighted_text(issue_title, issue_body)
 
 # Step 5: Similarity search
 results = calculate_similarity(faiss_index, model, combined_texts, query_text)
+print("🧪 Top FAISS results:")
+for i, (text, score) in enumerate(results[:5]):
+    print(f"{i+1}. Score: {score}")
+
 scores = [score for _, score in results]
 percentage_similarities = calculate_percentage_similarity(scores)
 
@@ -126,7 +134,11 @@ if percentage_similarities[0] > 70.0:
 else:
     base_comment += "✅ No strong duplicate candidates found. You may proceed."
 
-base_comment += f"\n\n🧠 **Gemini Review**\n```\n{gemini_response}\n```"
+if gemini_response:
+    base_comment += f"\n\n🧠 **Gemini Review**\n```\n{json.dumps(gemini_response, indent=2)}\n```"
+else:
+    base_comment += "\n\n🧠 Gemini did not confirm any duplicates."
+
 
 # Step 8: Post final comment
 requests.post(comment_url, headers=headers, json={"body": base_comment})
