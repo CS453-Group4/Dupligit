@@ -15,7 +15,7 @@ issue_number = os.getenv("ISSUE_NUMBER")
 repo = os.getenv("REPO")
 token = os.getenv("GH_TOKEN")
 
-# ✅ Validate required envs
+#Validate required envs
 required_envs = {
     "REPO": repo,
     "GH_TOKEN": token,
@@ -25,7 +25,7 @@ required_envs = {
 
 for key, val in required_envs.items():
     if not val:
-        print(f"❌ Missing environment variable: {key}")
+        print(f"Missing environment variable: {key}")
         exit(1)
 
 
@@ -58,16 +58,16 @@ r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 try:
     issues = r.json()
 except Exception as e:
-    print("❌ Failed to parse JSON from GitHub issues response")
-    print("🔁 Raw response:", r.text)
+    print("Failed to parse JSON from GitHub issues response")
+    print("Raw response:", r.text)
     raise e
 
 if not isinstance(issues, list):
-    print("❌ GitHub API did not return a list of issues")
-    print("🔁 Response:", issues)
+    print("GitHub API did not return a list of issues")
+    print("Response:", issues)
     exit(1)
 
-print("🧪 All issues fetched:")
+print(" all issues fetched:")
 for i in issues:
     print(f"- #{i['number']}: {i['title']}")
 
@@ -122,12 +122,12 @@ for (text, _), score in zip(top_results, top_scores):
         })
 
 
-print("🔬 Gemini INPUT DEBUG:")
+print("Gemini INPUT DEBUG:")
 print("issue_title:", issue_title)
 print("issue_body:", issue_body)
 print("similar_issues:", similar_issues)
 gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
-print("🧠 Gemini Parsed Response:")
+print("gemini Parsed Response:")
 print(json.dumps(gemini_response, indent=2))
 
 
@@ -137,7 +137,7 @@ for issue in similar_issues:
     if verdict and verdict["verdict"].lower() == "correct":
         filtered_similar_issues.append(issue)
 filtered_similar_issues = filtered_similar_issues[:5]
-print("✅ Gemini-approved duplicates:")
+print("gemini-approved duplicates:")
 for i in filtered_similar_issues:
     print(f"- {i['title']} ({i['score']:.1f}%)")
 
@@ -165,20 +165,20 @@ if filtered_similar_issues:
 
 
     base_comment += (
-        "\n📌 Label `needs-duplicate-review` has been added.\n"
-        "\n🔧 Maintainers can confirm by commenting:\n"
+        "\nLabel `needs-duplicate-review` has been added.\n"
+        "\nMaintainers can confirm by commenting:\n"
         "```bash\n/mark-duplicate #<issue_number>\n```"
     )
 
-    # ✅ Add label
+    #  Add label
     label_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/labels"
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
 else:
     base_comment += "✅ No strong duplicate candidates were confirmed by Gemini.\n"
     base_comment += "You may proceed or wait for human triage.\n"
 
-# ✅ Always post the comment
-print("📝 Posting final comment:")
+# Always post the comment
+print("Posting final comment:")
 print(base_comment)
 
 requests.post(comment_url, headers=headers, json={"body": base_comment})

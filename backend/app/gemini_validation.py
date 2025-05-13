@@ -30,9 +30,8 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
     ...
     ]
 
-    ⚠️ Do NOT explain. Do NOT summarize. Just return the raw JSON list. If none are valid, return [].
+     Do NOT explain. Do NOT summarize. Just return the raw JSON list. If none are valid, return [].
     """
-
 
     body = {
         "contents": [
@@ -46,10 +45,9 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
         response = requests.post(url, json=body)
         response.raise_for_status()
         gemini_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-        print("🧠 Gemini Raw Output Text:")
+        print("Gemini Raw Output Text:")
         print(gemini_text)
 
-        # ✅ Strip ```json ... ``` block if it exists
         if gemini_text.strip().startswith("```json"):
             gemini_text = gemini_text.strip()[7:-3].strip()  # remove ```json and ```
 
@@ -57,8 +55,8 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
             parsed = json.loads(gemini_text)
             return parsed
         except json.JSONDecodeError as e:
-            print("⚠️ Gemini response could not be parsed as JSON.")
-            print("⚠️ Error:", e)
+            print("Gemini response could not be parsed as JSON.")
+            print("Error:", e)
             return []
 
 
