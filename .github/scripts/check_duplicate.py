@@ -75,7 +75,10 @@ for (text, _), score in zip(top_results, top_scores):
             "body": body,
             "score": score
         })
-
+print("🔬 Gemini INPUT DEBUG:")
+print("issue_title:", issue_title)
+print("issue_body:", issue_body)
+print("similar_issues:", similar_issues)
 gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
 
 # Step 7: Prepare comment
