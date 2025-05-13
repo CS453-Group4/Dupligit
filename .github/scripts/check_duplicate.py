@@ -5,12 +5,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 
 import requests
 from backend.app.gemini_validation import validate_similarity_with_gemini
+from backend.app.text_similarity import create_faiss_index, calculate_similarity, calculate_percentage_similarity
 
-from backend.app.text_similarity import create_faiss_index
-from backend.app.text_similarity import calculate_similarity
+# 🔧 CONFIGURABLE WEIGHTS
+TITLE_WEIGHT = 0.6
+BODY_WEIGHT = 0.4
 
-from backend.app.text_similarity import calculate_percentage_similarity
+def weighted_text(title: str, body: str, title_weight: float = TITLE_WEIGHT, body_weight: float = BODY_WEIGHT):
+    return f"{(title + ' ') * int(title_weight * 10)} {(body + ' ') * int(body_weight * 10)}"
 
+# 🌍 Load environment variables
 issue_title = os.getenv("ISSUE_TITLE")
 issue_number = os.getenv("ISSUE_NUMBER")
 repo = os.getenv("REPO")
@@ -20,57 +24,59 @@ headers = {
     "Authorization": f"token {token}",
     "Accept": "application/vnd.github+json"
 }
-# Notify the user that the bot is running
+
 comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
-"""comment_payload = {"body": "🔍 Dupligit Bot is checking for similar issues. Please wait..."}
-resp = requests.post(comment_url, headers=headers, json=comment_payload)
 
-# DEBUG OUTPUT
-print("🧪 DEBUG: Comment POST status:", resp.status_code)
-print("🧪 DEBUG: Comment POST response:", resp.text)"""
-
-# Step 1: Fetch all other issue titles
+# Step 1: Fetch all issues in the repo
 r = requests.get(f"https://api.github.com/repos/{repo}/issues", headers=headers)
 issues = r.json()
-filtered_issues = [(i["title"], i["number"]) for i in issues if str(i["number"]) != issue_number]
-unique_titles = list(dict.fromkeys([t[0] for t in filtered_issues]))
-titles = unique_titles
 
-if not titles:
+# Step 2: Filter out the current issue and prepare texts
+filtered_issues = [(i["title"], i["number"], i.get("body", "")) for i in issues if str(i["number"]) != issue_number]
+
+if not filtered_issues:
     requests.post(comment_url, headers=headers, json={"body": "ℹ️ No other issues found to compare."})
     exit(0)
 
-# Step 2: Create FAISS index and calculate similarity
-faiss_index, model = create_faiss_index(titles)
-results = calculate_similarity(faiss_index, model, titles, issue_title)
-scores = [score for _, score in results]
+# Step 3: Prepare weighted combined texts
+combined_texts = [weighted_text(title, body) for title, _, body in filtered_issues]
+faiss_index, model = create_faiss_index(combined_texts)
 
-percentage_similarities = calculate_percentage_similarity(scores)
-# 🔍 Prepare Gemini input
+# Step 4: Prepare query from current issue
 current_issue = next((i for i in issues if str(i["number"]) == issue_number), {})
 issue_body = current_issue.get("body", "")
+query_text = weighted_text(issue_title, issue_body)
 
+# Step 5: Compute similarities
+results = calculate_similarity(faiss_index, model, combined_texts, query_text)
+scores = [score for _, score in results]
+percentage_similarities = calculate_percentage_similarity(scores)
+
+# Step 6: Build top results
 top_n = 3
 top_results = results[:top_n]
 top_scores = percentage_similarities[:top_n]
 
 similar_issues = []
-for (title, _), score in zip(top_results, top_scores):
-    matched = next((i for i in issues if i["title"] == title), {})
-    similar_issues.append({
-        "title": matched.get("title", ""),
-        "body": matched.get("body", ""),
-        "score": score
-    })
+for (text, _), score in zip(top_results, top_scores):
+    match = next(((title, num, body) for (title, num, body), w_text in zip(filtered_issues, combined_texts) if weighted_text(title, body) == text), None)
+    if match:
+        title, number, body = match
+        similar_issues.append({
+            "title": title,
+            "body": body,
+            "score": score
+        })
 
 gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
 
-
+# Step 7: Prepare comment
 base_comment = (
     f"🔍 **Dupligit Bot Report**\n\n"
     f"📝 Incoming Issue: _{issue_title}_\n\n"
 )
 
+# Add similarity report
 if percentage_similarities[0] > 70.0:
     base_comment += (
         "🔍 **Potential Duplicate Issues Found**\n\n"
@@ -79,16 +85,17 @@ if percentage_similarities[0] > 70.0:
         "|---------|-------|------------|\n"
     )
 
-    for i, (title, _) in enumerate(results[:5]):
+    for i, (text, _) in enumerate(results[:5]):
         percentage = percentage_similarities[i]
         if percentage < 70.0:
             continue
 
-        issue_index = next((num for t, num in filtered_issues if t == title), None)
-        if issue_index is None:
+        match = next(((title, num) for (title, num, body), w_text in zip(filtered_issues, combined_texts) if weighted_text(title, body) == text), None)
+        if not match:
             continue
+        title, issue_index = match
         title_link = f"https://github.com/{repo}/issues/{issue_index}"
-        safe_title = title.replace("|", "｜")  # escape markdown pipe
+        safe_title = title.replace("|", "｜")  # escape pipe
         base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {percentage:.0f}% |\n"
 
     base_comment += (
@@ -97,7 +104,7 @@ if percentage_similarities[0] > 70.0:
         "```bash\n/mark-duplicate #<issue_number>\n```"
     )
 
-    # Step 4: Add label
+    # Add label
     label_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/labels"
     requests.post(label_url, headers=headers, json={"labels": ["needs-duplicate-review"]})
 
@@ -106,5 +113,5 @@ else:
 
 base_comment += f"\n\n🧠 **Gemini Review**\n```\n{gemini_response}\n```"
 
-# Step 5: Post final comment
+# Step 8: Post final comment
 requests.post(comment_url, headers=headers, json={"body": base_comment})
