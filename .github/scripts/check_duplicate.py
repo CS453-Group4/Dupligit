@@ -174,3 +174,4 @@ print("📝 Posting final comment:")
 print(base_comment)
 
 requests.post(comment_url, headers=headers, json={"body": base_comment})
+exit(0) 
