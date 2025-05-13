@@ -16,21 +16,22 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
     """
 
     for idx, issue in enumerate(similar_issues, 1):
-        prompt += f"\n{idx}. Title: {issue['title']}\n   Description: {issue['body']}\n   Similarity Score: {issue['score']:.2f}%"
+        body = issue['body'].strip().replace("\n", " ")[:300]  # trim + flatten body
+        prompt += f"\n{idx}. Title: {issue['title']}\n   Description: {body}\n   Similarity Score: {issue['score']:.2f}%"
 
     prompt += """
-    For each detected similar issue, decide whether it is truly a duplicate of the main issue.
-
-    Reply using this exact JSON format:
+    Reply ONLY with this exact JSON format:
     [
     {
         "matched_issue_title": "...",
         "verdict": "Correct" or "False"
-    }
+    },
+    ...
     ]
 
-    Only return this JSON. Do not add any explanations or extra text.
+    ⚠️ Do NOT explain. Do NOT summarize. Just return the raw JSON list. If none are valid, return [].
     """
+
 
     body = {
         "contents": [
@@ -44,8 +45,16 @@ def validate_similarity_with_gemini(issue_title, issue_body, similar_issues):
         response = requests.post(url, json=body)
         response.raise_for_status()
         gemini_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-        parsed = json.loads(gemini_text)
-        return parsed
+        print("🧠 Gemini Raw Output Text:")
+        print(gemini_text)
+
+        try:
+            parsed = json.loads(gemini_text)
+            return parsed
+        except json.JSONDecodeError:
+            print("⚠️ Gemini response could not be parsed as JSON.")
+            return []
+
 
     except Exception as e:
         return []  #
