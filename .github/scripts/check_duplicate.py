@@ -156,8 +156,13 @@ if filtered_similar_issues:
         "|---------|-------|------------|\n"
     )
     for issue in filtered_similar_issues:
-        ...
+        title = issue["title"]
+        score = issue["score"]
+        issue_index = issue["number"]
+        title_link = f"https://github.com/{repo}/issues/{issue_index}"
+        safe_title = title.replace("|", "｜")  # Markdown table için pipe escape
         base_comment += f"| [#{issue_index}]({title_link}) | {safe_title} | {score:.0f}% |\n"
+
 
     base_comment += (
         "\n📌 Label `needs-duplicate-review` has been added.\n"
