@@ -50,3 +50,39 @@ jobs:
           repo: ${{ github.repository }}
 
 ```
+
+# User Manual (Usage Instructions)
+Project Repository: https://github.com/CS453-Group4/Dupligit
+
+How to Use
+  nstall Dupligit Action:
+  In your repo (e.g., your-org/your-repo), create a workflow file:  .github/workflows/dupligit.yml
+  Copy and paste the ready workflow YAML from the README.md of the Dupligit repository.
+
+
+  To use the latest stable version: uses:CS453-Group4/Dupligit@1.0.11
+
+  Add Secrets:
+  Go to your GitHub repo → Settings → Secrets → Actions:
+  GEMINI_API_KEY → your Gemini API key
+  GH_TOKEN is automatically available as a GitHub-provided token.
+
+# How It Works
+    A. When a user opens an issue:
+        Dupligit Bot scans all existing open issues.
+        Embeds and compares using FAISS + LLM validation.
+        If similar issues are found, it:
+        Posts a markdown table of candidates with % similarity.
+        Adds a needs-duplicate-review label.
+        Instructs maintainers to confirm.
+
+      B. When a maintainer comments:
+        /mark-duplicate #<issue_number>
+        Dupligit checks their permission (admin, maintain, write).
+        If authorized:
+        Posts a confirmation comment.
+        Adds duplicate label.
+        Closes the duplicate issue.
+        Users with read-only access cannot mark issues as duplicates.
+
+

@@ -58,25 +58,20 @@ print(f"False Negatives:              {false_negative}")
 print(f"Recall:                       {recall:.2%}")
 
 true_positive_examples = []
-false_negative_examples = []
 no_duplicate_ground_truth = []
 
 for issue_id, predicted_duplicates in test_results.items():
     true_duplicates = ground_truth.get(issue_id, set())
 
-    if not true_duplicates and len(no_duplicate_ground_truth) < 5:
+    if not true_duplicates and len(no_duplicate_ground_truth) < 15:
         no_duplicate_ground_truth.append(issue_id)
 
     elif true_duplicates:
-        if predicted_duplicates & true_duplicates and len(true_positive_examples) < 5:
+        if predicted_duplicates & true_duplicates and len(true_positive_examples) < 15:
             true_positive_examples.append((issue_id, true_duplicates, predicted_duplicates))
 
-        elif not (predicted_duplicates & true_duplicates) and len(false_negative_examples) < 5:
-            false_negative_examples.append((issue_id, true_duplicates, predicted_duplicates))
-
-    if (len(true_positive_examples) >= 5 and
-        len(false_negative_examples) >= 5 and
-        len(no_duplicate_ground_truth) >= 5):
+    if (len(true_positive_examples) >= 15 and
+        len(no_duplicate_ground_truth) >= 15):
         break
 
 # Write to CSV
@@ -91,14 +86,6 @@ with open(examples_file_path, 'w', newline='') as csvfile:
     for issue_id, gt, pred in true_positive_examples:
         writer.writerow({
             'Case_Type': 'True Positive',
-            'Issue_ID': issue_id,
-            'Ground_Truth_Duplicates': ';'.join(gt),
-            'Predicted_Duplicates': ';'.join(pred)
-        })
-
-    for issue_id, gt, pred in false_negative_examples:
-        writer.writerow({
-            'Case_Type': 'False Negative',
             'Issue_ID': issue_id,
             'Ground_Truth_Duplicates': ';'.join(gt),
             'Predicted_Duplicates': ';'.join(pred)

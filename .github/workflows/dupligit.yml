@@ -10,6 +10,7 @@ on:
 
 jobs:
   check-duplicate:
+    if: github.event_name == 'issues'
     # only runs on new issues (issues.opened)
     runs-on: ubuntu-latest
     permissions:
