@@ -126,7 +126,14 @@ print("🔬 Gemini INPUT DEBUG:")
 print("issue_title:", issue_title)
 print("issue_body:", issue_body)
 print("similar_issues:", similar_issues)
-gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
+# Step 6.5: Check for GEMINI_API_KEY before calling
+gemini_key = os.getenv("GEMINI_API_KEY")
+if not gemini_key:
+    print("❌ Missing GEMINI_API_KEY — skipping Gemini validation")
+    gemini_response = []
+else:
+    gemini_response = validate_similarity_with_gemini(issue_title, issue_body, similar_issues)
+
 print("🧠 Gemini Parsed Response:")
 print(json.dumps(gemini_response, indent=2))
 
