@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Dupligit Check
-        uses: CS453-Group4/Dupligit@v1.0.7
+        uses: CS453-Group4/Dupligit@v1.0.11
         with:
           mode: check
           issue-title: ${{ github.event.issue.title }}
@@ -39,6 +39,7 @@ jobs:
           repo: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
   mark-duplicate:
     if: |
@@ -47,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Dupligit Mark
-        uses: CS453-Group4/Dupligit@v1.0.7
+        uses: CS453-Group4/Dupligit@v1.0.11
         with:
           mode: mark
           issue-body: ${{ github.event.comment.body }}
@@ -56,6 +57,7 @@ jobs:
           repo: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
 
 ```
